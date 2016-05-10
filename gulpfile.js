@@ -2,6 +2,7 @@ var gulp        = require('gulp');
 var browserSync = require('browser-sync');
 var sass        = require('gulp-sass');
 var prefix      = require('gulp-autoprefixer');
+var jade        = require('gulp-jade');
 var cp          = require('child_process');
 
 var jekyll   = process.platform === 'win32' ? 'jekyll.bat' : 'jekyll';
@@ -40,9 +41,9 @@ gulp.task('browser-sync', ['sass', 'jekyll-build'], function() {
  * Compile files from _scss into both _site/css (for live injecting) and site (for future jekyll builds)
  */
 gulp.task('sass', function () {
-    return gulp.src('_scss/main.scss')
+    return gulp.src('_sass/main.scss')
         .pipe(sass({
-            includePaths: ['scss'],
+            includePaths: ['sass'],
             onError: browserSync.notify
         }))
         .pipe(prefix(['last 15 versions', '> 1%', 'ie 8', 'ie 7'], { cascade: true }))
@@ -52,12 +53,25 @@ gulp.task('sass', function () {
 });
 
 /**
- * Watch scss files for changes & recompile
+ * Compile jade from _jade and pipe into _includes folder
+ */
+gulp.task('jade', function() {
+   return gulp.src('_jade/*.jade')
+       .pipe(jade({
+           pretty: true  
+       }))
+        .pipe(gulp.dest('_includes'));
+});
+
+/**
+ * Watch sass files for changes & recompile
+ * Watch jade files for changes & compile to HTML
  * Watch html/md files, run jekyll & reload BrowserSync
  */
 gulp.task('watch', function () {
-    gulp.watch('_scss/*.scss', ['sass']);
-    gulp.watch(['*.html', '_layouts/*.html', '_posts/*'], ['jekyll-rebuild']);
+    gulp.watch('_sass/*.sass' '_sass/*.scss', ['sass']);
+    gulp.watch('_jade/*.jade', ['jade']);
+    gulp.watch(['*.html', '_layouts/*.html', '_posts/*', '_includes/*'], ['jekyll-rebuild']);
 });
 
 /**
